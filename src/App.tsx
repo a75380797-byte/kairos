@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import {
   UserCheck,
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import { RegistrationPage } from './pages/RegistrationPage';
+import LoginPage from './pages/LoginPage';
 import { ProgramsPage } from './pages/ProgramsPage';
 import { ProgramDetailPage } from './pages/ProgramDetailPage';
 import { StudentsPage } from './pages/StudentsPage';
@@ -36,6 +37,22 @@ const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('register');
   const [isDbMenuOpen, setIsDbMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkSession = () => {
+      try {
+        const raw = localStorage.getItem('kairoos_session');
+        if (!raw) return false;
+        const s = JSON.parse(raw);
+        if (!s || !s.expiry) return false;
+        return s.expiry > Date.now();
+      } catch (e) {
+        return false;
+      }
+    };
+    setIsAuthenticated(checkSession());
+  }, []);
 
   // Sub-navigation state
   const [selectedProgramId, setSelectedProgramId] = useState<string | undefined>(undefined);
@@ -80,6 +97,15 @@ const MainApp: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-main)' }}>
+      {!isAuthenticated && (
+        <LoginPage
+          onLogin={() => {
+            setIsAuthenticated(true);
+          }}
+        />
+      )}
+
+      {isAuthenticated && (
       <input
         type="file"
         ref={fileInputRef}
@@ -321,7 +347,8 @@ const MainApp: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="main-layout">
+      {isAuthenticated && (
+        <main className="main-layout">
         {activeTab === 'register' && (
           <RegistrationPage
             initialProgramId={selectedProgramId}
@@ -356,7 +383,8 @@ const MainApp: React.FC = () => {
         )}
 
         {activeTab === 'audit' && <AuditLogsPage />}
-      </main>
+        </main>
+      )}
 
       {/* Fixed Bottom Navigation Bar (Mobile View) */}
       <nav className="bottom-nav-mobile">
