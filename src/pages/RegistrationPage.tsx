@@ -132,11 +132,12 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        await videoRef.current.play().catch(() => {});
         setIsCameraActive(true);
       }
     } catch (err: any) {
       console.warn('Webcam stream unavailable:', err);
-      setCameraError('Camera access not granted or unavailable. You can upload a photo of the paper below!');
+      setCameraError('Camera access not granted or unavailable. You can upload a photo of the paper sheet!');
       setIsCameraActive(false);
     }
   };
@@ -155,16 +156,22 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
+      const w = video.videoWidth || 1280;
+      const h = video.videoHeight || 720;
+      canvas.width = w;
+      canvas.height = h;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        capturedDataUrl = canvas.toDataURL('image/jpeg');
+        ctx.drawImage(video, 0, 0, w, h);
+        capturedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
         setUploadedImagePreview(capturedDataUrl);
       }
     }
-    handleRunAiPaperScan(capturedDataUrl || uploadedImagePreview || paperText);
+    if (capturedDataUrl) {
+      handleRunAiPaperScan(capturedDataUrl);
+    } else {
+      setScanError('Failed to capture snapshot from camera stream. Make sure camera is active.');
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

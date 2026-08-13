@@ -1,3 +1,5 @@
+import { parsePaperWithGemini } from './geminiService';
+
 export interface ParsedStudentFromPaper {
   fullName: string;
   classGrade: string; // S1A, S1B, S2A, S2B, C1A, C1B, C1C, C2A, C2B, C2C, 8, 9, TBD
@@ -82,12 +84,12 @@ Do NOT return any markdown wrapper code blocks or conversational text outside th
   let messagesPayload: any[];
 
   if (isBase64Image) {
+    // Note: Groq vision models do NOT support separate system role messages. Put system prompt inside user content.
     messagesPayload = [
-      { role: 'system', content: systemPrompt },
       {
         role: 'user',
         content: [
-          { type: 'text', text: 'Extract all student records from this document image:' },
+          { type: 'text', text: `${systemPrompt}\n\nExtract all student records from this document image:` },
           { type: 'image_url', image_url: { url: paperContentTextOrBase64 } },
         ],
       },
@@ -117,12 +119,6 @@ Do NOT return any markdown wrapper code blocks or conversational text outside th
 
     if (!response.ok) {
       const errText = await response.text();
-      if (response.status === 401) {
-        throw new Error('Groq API Key is invalid or expired (401 Unauthorized). Please provide a valid Groq API Key.');
-      }
-      if (response.status === 429) {
-        throw new Error('Groq AI API Rate Limit exceeded (429). Please try again in a few moments or use a custom API key.');
-      }
       throw new Error(`Groq AI Service Error (${response.status}): ${errText}`);
     }
 
@@ -144,12 +140,24 @@ Do NOT return any markdown wrapper code blocks or conversational text outside th
       studentId: item.studentId ? String(item.studentId) : undefined,
     }));
   } catch (err: any) {
-    console.error('Groq AI Scanner Error:', err);
+    console.warn('Groq AI Scanner Error, attempting Gemini AI fallback...', err);
 
+    // Fallback 1: Try Gemini AI automatically
+    try {
+      const geminiResults = await parsePaperWithGemini(paperContentTextOrBase64, customApiKey);
+      if (geminiResults && geminiResults.length > 0) {
+        console.log('Gemini AI Fallback scanner succeeded:', geminiResults);
+        return geminiResults;
+      }
+    } catch (geminiErr) {
+      console.warn('Gemini AI Fallback also failed:', geminiErr);
+    }
+
+    // Fallback 2: Offline regex parser if plain text
     if (!isBase64Image && paperContentTextOrBase64.trim().length > 0) {
       const fallbackResults = fallbackLocalParseText(paperContentTextOrBase64);
       if (fallbackResults.length > 0) {
-        console.warn('Groq fetch failed, using offline fallback parser:', fallbackResults);
+        console.warn('Using offline fallback regex parser:', fallbackResults);
         return fallbackResults;
       }
     }
@@ -157,6 +165,3 @@ Do NOT return any markdown wrapper code blocks or conversational text outside th
     throw err;
   }
 };
-
-// Re-export alias for backwards compatibility
-export const parsePaperWithGemini = parsePaperWithGroq;
