@@ -106,7 +106,8 @@ const MainApp: React.FC = () => {
       )}
 
       {isAuthenticated && (
-      <input
+        <>
+          <input
         type="file"
         ref={fileInputRef}
         onChange={handleFileUpload}
@@ -347,8 +348,7 @@ const MainApp: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      {isAuthenticated && (
-        <main className="main-layout">
+      <main className="main-layout">
         {activeTab === 'register' && (
           <RegistrationPage
             initialProgramId={selectedProgramId}
@@ -383,8 +383,7 @@ const MainApp: React.FC = () => {
         )}
 
         {activeTab === 'audit' && <AuditLogsPage />}
-        </main>
-      )}
+      </main>
 
       {/* Fixed Bottom Navigation Bar (Mobile View) */}
       <nav className="bottom-nav-mobile">
@@ -420,6 +419,8 @@ const MainApp: React.FC = () => {
           <span>Audit Logs</span>
         </button>
       </nav>
+    </>
+  )}
     </div>
   );
 };

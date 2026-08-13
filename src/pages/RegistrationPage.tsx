@@ -19,14 +19,14 @@ import {
 import confetti from 'canvas-confetti';
 import { checkStudentEligibility } from '../services/eligibilityEngine';
 import { OverrideModal } from '../components/OverrideModal';
-import { parsePaperWithGroq, type ParsedStudentFromPaper } from '../services/groqService';
+import { parsePaperWithGemini, type ParsedStudentFromPaper } from '../services/geminiService';
 import type { Student, ParticipationStatus, EligibilityResult } from '../types';
 
 interface RegistrationPageProps {
-  initialProgramId?: string;
-  initialRoundId?: string;
-  initialStudentId?: string;
-  onNavigateToStudent: (studentId: string) => void;
+  initialProgramId?: string | null;
+  initialRoundId?: string | null;
+  initialStudentId?: string | null;
+  onNavigateToStudent?: (studentId: string) => void;
 }
 
 interface AIScanEvaluationItem {
@@ -54,27 +54,23 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
     currentUserRole,
   } = useApp();
 
-  const [selectedProgramId, setSelectedProgramId] = useState<string>(
-    initialProgramId || programs[0]?.id || ''
-  );
-
-  const programRounds = rounds
-    .filter((r) => r.programId === selectedProgramId)
-    .sort((a, b) => a.sequenceIndex - b.sequenceIndex);
-
-  const [selectedRoundId, setSelectedRoundId] = useState<string>(
-    initialRoundId || programRounds.find((r) => r.status === 'Registration Open')?.id || programRounds[0]?.id || ''
-  );
+  const [selectedProgramId, setSelectedProgramId] = useState<string>('');
+  const [selectedRoundId, setSelectedRoundId] = useState<string>('');
 
   const [studentSearch, setStudentSearch] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const [isAddRoundModalOpen, setIsAddRoundModalOpen] = useState(false);
   const [quickRoundNum, setQuickRoundNum] = useState('');
-  const [quickRoundDate, setQuickRoundDate] = useState('2026-08-25');
+  const [quickRoundDate, setQuickRoundDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const [customGeminiKey, setCustomGeminiKey] = useState<string>(
+    () => localStorage.getItem('kairoos_gemini_key') || localStorage.getItem('kairoos_groq_key') || ''
+  );
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
   // AI Camera Paper Scanner Modal State
   const [isAiScannerOpen, setIsAiScannerOpen] = useState(false);
@@ -101,16 +97,25 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
   }, [initialStudentId, students]);
 
   useEffect(() => {
-    if (selectedProgramId) {
-      const pRounds = rounds
-        .filter((r) => r.programId === selectedProgramId)
-        .sort((a, b) => a.sequenceIndex - b.sequenceIndex);
-      if (!pRounds.some((r) => r.id === selectedRoundId)) {
-        const openR = pRounds.find((r) => r.status === 'Registration Open');
-        setSelectedRoundId(openR ? openR.id : pRounds[0]?.id || '');
-      }
+    if (initialProgramId) {
+      setSelectedProgramId(initialProgramId);
+    } else if (programs.length > 0 && !selectedProgramId) {
+      setSelectedProgramId(programs[0].id);
     }
-  }, [selectedProgramId, rounds]);
+  }, [programs, selectedProgramId, initialProgramId]);
+
+  const programRounds = rounds.filter((r) => r.programId === selectedProgramId);
+
+  useEffect(() => {
+    if (initialRoundId) {
+      setSelectedRoundId(initialRoundId);
+    } else if (programRounds.length > 0) {
+      const openRound = programRounds.find((r) => r.status === 'Registration Open') || programRounds[0];
+      setSelectedRoundId(openRound.id);
+    } else {
+      setSelectedRoundId('');
+    }
+  }, [selectedProgramId, rounds, initialRoundId]);
 
   // Clean up camera stream when modal closes
   useEffect(() => {
@@ -146,6 +151,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
   };
 
   const handleSnapCameraAndAnalyze = () => {
+    let capturedDataUrl = '';
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -154,11 +160,11 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg');
-        setUploadedImagePreview(dataUrl);
+        capturedDataUrl = canvas.toDataURL('image/jpeg');
+        setUploadedImagePreview(capturedDataUrl);
       }
     }
-    handleRunAiPaperScan(paperText);
+    handleRunAiPaperScan(capturedDataUrl || uploadedImagePreview || paperText);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,7 +260,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
     setScanResults(null);
 
     try {
-      const extractedList = await parsePaperWithGroq(contentToScan);
+      const extractedList = await parsePaperWithGemini(contentToScan, customGeminiKey);
 
       const evaluatedItems: AIScanEvaluationItem[] = extractedList.map((ext) => {
         let matched = students.find(
@@ -545,7 +551,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
                 className="btn btn-secondary btn-sm"
-                onClick={() => onNavigateToStudent(selectedStudent.id)}
+                onClick={() => onNavigateToStudent && onNavigateToStudent(selectedStudent.id)}
               >
                 Profile History
               </button>
@@ -788,9 +794,48 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
               </button>
             </div>
 
-            <div className="mb-4" style={{ fontSize: '0.875rem', color: '#334155' }}>
-              Position the paper sheet poster in front of your camera or snap/upload a photo. The AI will parse student names, classes, and house teams, then check eligibility automatically!
+            <div className="mb-3 flex-between" style={{ fontSize: '0.875rem', color: '#334155' }}>
+              <span>Position paper sheet in front of camera or snap/upload photo. The AI will parse records & verify eligibility.</span>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+                onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+              >
+                ⚙️ {showApiKeyInput ? 'Hide API Settings' : 'Gemini Key Settings'}
+              </button>
             </div>
+
+            {showApiKeyInput && (
+              <div className="mb-4" style={{ padding: '0.75rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 'var(--radius-md)' }}>
+                <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700 }}>
+                  Custom Gemini API Key (Optional Override)
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="AQ..."
+                    value={customGeminiKey}
+                    onChange={(e) => setCustomGeminiKey(e.target.value)}
+                    style={{ fontSize: '0.82rem' }}
+                  />
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    type="button"
+                    onClick={() => {
+                      localStorage.setItem('kairoos_gemini_key', customGeminiKey);
+                      alert('Saved custom Gemini API key!');
+                    }}
+                  >
+                    Save Key
+                  </button>
+                </div>
+                <div style={{ fontSize: '0.73rem', color: '#64748b', marginTop: '0.3rem' }}>
+                  Get your Gemini API key at <a href="https://aistudio.google.com" target="_blank" rel="noreferrer">aistudio.google.com</a>.
+                </div>
+              </div>
+            )}
 
             {/* SCANNER MODES TABS */}
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', background: '#f1f5f9', padding: '0.3rem', borderRadius: 'var(--radius-md)' }}>
@@ -933,7 +978,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
                 <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
                   <button
                     className="btn btn-primary"
-                    onClick={() => handleRunAiPaperScan(paperText)}
+                    onClick={() => handleRunAiPaperScan(uploadedImagePreview || paperText)}
                     disabled={isScanning}
                   >
                     {isScanning ? (
