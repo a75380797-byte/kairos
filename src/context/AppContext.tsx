@@ -10,9 +10,11 @@ import type {
   ParticipationStatus,
   RoundStatus,
   AuditActionType,
+  DisciplinaryRecord,
+  SheetType,
 } from '../types';
 import { StorageService } from '../services/storage';
-import { checkStudentEligibility } from '../services/eligibilityEngine';
+import { checkStudentEligibility, isBanActive } from '../services/eligibilityEngine';
 
 interface AppContextType {
   currentUserRole: UserRole;
@@ -22,6 +24,7 @@ interface AppContextType {
   students: Student[];
   registrations: Registration[];
   auditLogs: AuditLog[];
+  disciplinaryRecords: DisciplinaryRecord[];
   
   registerStudent: (
     studentId: string,
@@ -43,6 +46,19 @@ interface AppContextType {
   
   addStudent: (student: Omit<Student, 'id' | 'createdAt'>) => Student;
   updateStudent: (student: Student) => void;
+
+  issueDisciplinarySheet: (
+    studentId: string,
+    sheetType: SheetType,
+    reason: string
+  ) => { success: boolean; message: string; record?: DisciplinaryRecord };
+
+  revokeDisciplinarySheet: (
+    recordId: string,
+    revocationReason: string
+  ) => { success: boolean; message: string };
+
+  getActiveBanForStudent: (studentId: string) => DisciplinaryRecord | null;
   
   logAuditAction: (
     action: AuditActionType,
@@ -73,6 +89,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [students, setStudents] = useState<Student[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [disciplinaryRecords, setDisciplinaryRecords] = useState<DisciplinaryRecord[]>([]);
 
   useEffect(() => {
     reloadFromStorage();
@@ -84,6 +101,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setStudents(StorageService.getStudents());
     setRegistrations(StorageService.getRegistrations());
     setAuditLogs(StorageService.getAuditLogs());
+    setDisciplinaryRecords(StorageService.getDisciplinaryRecords());
   };
 
   const updateProgramsState = (newPrograms: Program[]) => {
@@ -109,6 +127,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateAuditLogsState = (newLogs: AuditLog[]) => {
     setAuditLogs(newLogs);
     StorageService.saveAuditLogs(newLogs);
+  };
+
+  const updateDisciplinaryRecordsState = (newRecords: DisciplinaryRecord[]) => {
+    setDisciplinaryRecords(newRecords);
+    StorageService.saveDisciplinaryRecords(newRecords);
   };
 
   const getUserNameForRole = (role: UserRole) => {
@@ -180,7 +203,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    const eligibility = checkStudentEligibility(student, program, round, rounds, registrations, students);
+    const eligibility = checkStudentEligibility(
+      student,
+      program,
+      round,
+      rounds,
+      registrations,
+      students,
+      disciplinaryRecords
+    );
 
     if (!eligibility.isEligible && !isOverridden) {
       logAuditAction(
@@ -523,6 +554,112 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  const issueDisciplinarySheet = (
+    studentId: string,
+    sheetType: SheetType,
+    reason: string
+  ) => {
+    if (currentUserRole === 'VIEWER') {
+      return { success: false, message: 'Viewers cannot issue disciplinary sheets.' };
+    }
+
+    const student = students.find((s) => s.id === studentId);
+    if (!student) {
+      return { success: false, message: 'Student not found.' };
+    }
+
+    const durationDays = sheetType === 'BLACK' ? 15 : 3;
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + durationDays);
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    const newRecord: DisciplinaryRecord = {
+      id: `disc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      studentId: student.id,
+      studentName: student.fullName,
+      studentCode: student.studentId,
+      houseGroup: student.houseGroup,
+      classGrade: student.classGrade,
+      sheetType,
+      issueDate: todayStr,
+      endDate: endDateStr,
+      durationDays,
+      reason: reason.trim() || `${sheetType === 'BLACK' ? 'Black Sheet (15-Day Ban)' : 'Yellow Sheet (3-Day Ban)'} issued.`,
+      issuedBy: getUserNameForRole(currentUserRole),
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedRecords = [newRecord, ...disciplinaryRecords];
+    updateDisciplinaryRecordsState(updatedRecords);
+
+    const sheetName = sheetType === 'BLACK' ? 'Black Sheet (15-Day All-Program Ban)' : 'Yellow Sheet (3-Day Ban)';
+    logAuditAction(
+      'DISCIPLINARY_SHEET_ISSUED',
+      `Issued ${sheetName} to ${student.fullName} (${student.studentId}, Class: ${student.classGrade}, House: ${student.houseGroup}). Ban valid until ${endDateStr}. Reason: "${newRecord.reason}"`,
+      {
+        studentId: student.id,
+        studentName: student.fullName,
+        reason: newRecord.reason,
+      }
+    );
+
+    return {
+      success: true,
+      message: `Successfully issued ${sheetType === 'BLACK' ? 'Black Sheet (15-Day Ban)' : 'Yellow Sheet (3-Day Ban)'} to ${student.fullName}. Ban active until ${endDateStr}.`,
+      record: newRecord,
+    };
+  };
+
+  const revokeDisciplinarySheet = (recordId: string, revocationReason: string) => {
+    if (currentUserRole === 'VIEWER') {
+      return { success: false, message: 'Viewers cannot revoke disciplinary records.' };
+    }
+
+    const record = disciplinaryRecords.find((r) => r.id === recordId);
+    if (!record) {
+      return { success: false, message: 'Disciplinary record not found.' };
+    }
+
+    const updatedRecords = disciplinaryRecords.map((r) => {
+      if (r.id === recordId) {
+        return {
+          ...r,
+          status: 'REVOKED' as const,
+          revokedAt: new Date().toISOString(),
+          revokedBy: getUserNameForRole(currentUserRole),
+          revocationReason: revocationReason.trim() || 'Revoked by Administrator',
+        };
+      }
+      return r;
+    });
+
+    updateDisciplinaryRecordsState(updatedRecords);
+
+    logAuditAction(
+      'DISCIPLINARY_SHEET_REVOKED',
+      `Revoked ${record.sheetType} Sheet ban for ${record.studentName} (${record.studentCode}). Revocation Reason: "${revocationReason || 'Admin Action'}"`,
+      {
+        studentId: record.studentId,
+        studentName: record.studentName,
+        reason: revocationReason,
+      }
+    );
+
+    return { success: true, message: `Disciplinary ban revoked for ${record.studentName}.` };
+  };
+
+  const getActiveBanForStudent = (studentId: string): DisciplinaryRecord | null => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const found = disciplinaryRecords.find(
+      (record) => record.studentId === studentId && isBanActive(record, todayStr)
+    );
+    return found || null;
+  };
+
   const clearAllData = () => {
     StorageService.clearDatabase();
     reloadFromStorage();
@@ -560,6 +697,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         students,
         registrations,
         auditLogs,
+        disciplinaryRecords,
         registerStudent,
         cancelRegistration,
         updateRegistrationStatus,
@@ -570,6 +708,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         generateFutureRounds,
         addStudent,
         updateStudent,
+        issueDisciplinarySheet,
+        revokeDisciplinarySheet,
+        getActiveBanForStudent,
         logAuditAction,
         clearAllData,
         exportDatabaseJSON,

@@ -4,6 +4,7 @@ import type {
   Student,
   Registration,
   AuditLog,
+  DisciplinaryRecord,
 } from '../types';
 
 const STORAGE_KEYS = {
@@ -12,6 +13,7 @@ const STORAGE_KEYS = {
   STUDENTS: 'kairoos_sqlite3_students_v14',
   REGISTRATIONS: 'kairoos_sqlite3_registrations_v14',
   AUDIT_LOGS: 'kairoos_sqlite3_audit_logs_v14',
+  DISCIPLINARY_RECORDS: 'kairoos_sqlite3_disciplinary_v14',
 };
 
 // Purge legacy storage keys
@@ -630,6 +632,24 @@ export const SQLiteService = {
     localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(logs));
   },
 
+  getDisciplinaryRecords: (): DisciplinaryRecord[] => {
+    const raw = localStorage.getItem(STORAGE_KEYS.DISCIPLINARY_RECORDS);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {
+        // Fallthrough
+      }
+    }
+    localStorage.setItem(STORAGE_KEYS.DISCIPLINARY_RECORDS, JSON.stringify([]));
+    return [];
+  },
+
+  saveDisciplinaryRecords: (records: DisciplinaryRecord[]) => {
+    localStorage.setItem(STORAGE_KEYS.DISCIPLINARY_RECORDS, JSON.stringify(records));
+  },
+
   clearAllSqliteData: () => {
     purgeLegacyStorage();
     localStorage.setItem(STORAGE_KEYS.PROGRAMS, JSON.stringify(INITIAL_PROGRAMS));
@@ -637,6 +657,7 @@ export const SQLiteService = {
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(ALL_324_STUDENTS_ROSTER));
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(INITIAL_REGISTRATIONS));
     localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(INITIAL_AUDIT_LOGS));
+    localStorage.setItem(STORAGE_KEYS.DISCIPLINARY_RECORDS, JSON.stringify([]));
   },
 
   exportDatabaseDump: (): string => {
@@ -648,6 +669,7 @@ export const SQLiteService = {
       students: SQLiteService.getStudents(),
       registrations: SQLiteService.getRegistrations(),
       auditLogs: SQLiteService.getAuditLogs(),
+      disciplinaryRecords: SQLiteService.getDisciplinaryRecords(),
     };
     return JSON.stringify(dump, null, 2);
   },
@@ -662,6 +684,9 @@ export const SQLiteService = {
       if (Array.isArray(tables.registrations)) SQLiteService.saveRegistrations(tables.registrations);
       if (Array.isArray(tables.audit_logs || tables.auditLogs)) {
         SQLiteService.saveAuditLogs(tables.audit_logs || tables.auditLogs);
+      }
+      if (Array.isArray(tables.disciplinary_records || tables.disciplinaryRecords)) {
+        SQLiteService.saveDisciplinaryRecords(tables.disciplinary_records || tables.disciplinaryRecords);
       }
       return true;
     } catch {

@@ -52,6 +52,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
     addRound,
     addStudent,
     currentUserRole,
+    disciplinaryRecords,
   } = useApp();
 
   const [selectedProgramId, setSelectedProgramId] = useState<string>('');
@@ -71,6 +72,20 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
     () => localStorage.getItem('kairoos_groq_key') || ''
   );
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+
+  const handleToggleApiKeySettings = () => {
+    if (showApiKeyInput) {
+      setShowApiKeyInput(false);
+      return;
+    }
+
+    const code = window.prompt('Enter Admin Secret Security Code to unlock AI Key Settings:');
+    if (code === '786') {
+      setShowApiKeyInput(true);
+    } else if (code !== null) {
+      alert('Incorrect secret code! Access denied.');
+    }
+  };
 
   // AI Camera Paper Scanner Modal State
   const [isAiScannerOpen, setIsAiScannerOpen] = useState(false);
@@ -190,7 +205,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
 
   const eligibility =
     selectedStudent && currentProgram && currentRound
-      ? checkStudentEligibility(selectedStudent, currentProgram, currentRound, rounds, registrations, students)
+      ? checkStudentEligibility(selectedStudent, currentProgram, currentRound, rounds, registrations, students, disciplinaryRecords)
       : null;
 
   const filteredStudentSuggestions = studentSearch.trim()
@@ -287,7 +302,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
           };
         }
 
-        const elig = checkStudentEligibility(matched, currentProgram, currentRound, rounds, registrations, students);
+        const elig = checkStudentEligibility(matched, currentProgram, currentRound, rounds, registrations, students, disciplinaryRecords);
 
         return {
           extracted: ext,
@@ -807,9 +822,9 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
                 type="button"
                 className="btn btn-secondary btn-sm"
                 style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
-                onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+                onClick={handleToggleApiKeySettings}
               >
-                ⚙️ {showApiKeyInput ? 'Hide API Settings' : 'Groq Key Settings'}
+                ⚙️ {showApiKeyInput ? 'Hide API Settings' : '🔒 Groq Key Settings'}
               </button>
             </div>
 

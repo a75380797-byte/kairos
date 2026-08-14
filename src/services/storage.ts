@@ -4,6 +4,7 @@ import type {
   Student,
   Registration,
   AuditLog,
+  DisciplinaryRecord,
 } from '../types';
 import { SQLiteService } from './sqliteStorage';
 
@@ -22,6 +23,9 @@ export const StorageService = {
 
   getAuditLogs: (): AuditLog[] => SQLiteService.getAuditLogs(),
   saveAuditLogs: (logs: AuditLog[]) => SQLiteService.saveAuditLogs(logs),
+
+  getDisciplinaryRecords: (): DisciplinaryRecord[] => SQLiteService.getDisciplinaryRecords(),
+  saveDisciplinaryRecords: (records: DisciplinaryRecord[]) => SQLiteService.saveDisciplinaryRecords(records),
 
   clearDatabase: () => SQLiteService.clearAllSqliteData(),
 

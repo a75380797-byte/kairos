@@ -4,7 +4,22 @@ import type {
   Round,
   Registration,
   EligibilityResult,
+  DisciplinaryRecord,
 } from '../types';
+
+export function isBanActive(record: DisciplinaryRecord, checkDateStr?: string): boolean {
+  if (record.status !== 'ACTIVE') return false;
+  const targetDate = checkDateStr ? new Date(checkDateStr) : new Date();
+  targetDate.setHours(12, 0, 0, 0);
+  
+  const start = new Date(record.issueDate);
+  start.setHours(0, 0, 0, 0);
+  
+  const end = new Date(record.endDate);
+  end.setHours(23, 59, 59, 999);
+  
+  return targetDate >= start && targetDate <= end;
+}
 
 export const COMBINED_CLASS_PAIRS: { [key: string]: string[] } = {
   S1A: ['S1A', 'S2A'],
@@ -39,9 +54,28 @@ export function checkStudentEligibility(
   targetRound: Round,
   allRounds: Round[],
   allRegistrations: Registration[],
-  allStudents: Student[] = []
+  allStudents: Student[] = [],
+  disciplinaryRecords: DisciplinaryRecord[] = []
 ): EligibilityResult {
   const rule = program.rule;
+
+  // 1. Check Disciplinary Ban Status
+  const activeBan = disciplinaryRecords.find(
+    (record) => record.studentId === student.id && isBanActive(record, targetRound.date || new Date().toISOString().split('T')[0])
+  );
+
+  if (activeBan) {
+    const sheetLabel = activeBan.sheetType === 'BLACK' ? 'Black Sheet (15-Day All-Program Ban)' : 'Yellow Sheet (3-Day Ban)';
+    return {
+      isEligible: false,
+      reason: `🚨 DISCIPLINARY BAN ACTIVE: Student has an active ${sheetLabel} issued on ${activeBan.issueDate} until ${activeBan.endDate}. Reason: "${activeBan.reason}".`,
+      student,
+      program,
+      targetRound,
+      activeBan,
+      ruleApplied: rule,
+    };
+  }
 
   const studentProgramRegistrations = allRegistrations.filter(
     (reg) => reg.studentId === student.id && reg.programId === program.id

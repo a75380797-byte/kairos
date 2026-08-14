@@ -22,6 +22,7 @@ import { ProgramDetailPage } from './pages/ProgramDetailPage';
 import { StudentsPage } from './pages/StudentsPage';
 import { StudentDetailPage } from './pages/StudentDetailPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
+import { DisciplinaryPage } from './pages/DisciplinaryPage';
 import type { UserRole } from './types';
 
 const MainApp: React.FC = () => {
@@ -162,6 +163,14 @@ const MainApp: React.FC = () => {
           >
             <Users size={16} />
             <span>3. Student Database</span>
+          </button>
+
+          <button
+            className={`tab-btn ${activeTab === 'disciplinary' ? 'active' : ''}`}
+            onClick={() => setActiveTab('disciplinary')}
+          >
+            <ShieldAlert size={16} style={{ color: '#ef4444' }} />
+            <span>4. Discipline & Bans</span>
           </button>
 
           <button
@@ -382,6 +391,8 @@ const MainApp: React.FC = () => {
           />
         )}
 
+        {activeTab === 'disciplinary' && <DisciplinaryPage />}
+
         {activeTab === 'audit' && <AuditLogsPage />}
       </main>
 
@@ -409,6 +420,14 @@ const MainApp: React.FC = () => {
         >
           <Users size={20} />
           <span>Students</span>
+        </button>
+
+        <button
+          className={`bottom-nav-item ${activeTab === 'disciplinary' ? 'active' : ''}`}
+          onClick={() => setActiveTab('disciplinary')}
+        >
+          <ShieldAlert size={20} style={{ color: '#ef4444' }} />
+          <span>Bans</span>
         </button>
 
         <button

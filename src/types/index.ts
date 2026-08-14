@@ -90,7 +90,32 @@ export interface EligibilityResult {
   daysRemaining?: number;
   eligibleFromRound?: Round;
   eligibleFromDate?: string;
+  activeBan?: DisciplinaryRecord;
   ruleApplied: ProgramRule;
+}
+
+export type SheetType = 'BLACK' | 'YELLOW';
+
+export type DisciplinarySheetStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED';
+
+export interface DisciplinaryRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  studentCode: string;
+  houseGroup: HouseTeam;
+  classGrade: string;
+  sheetType: SheetType;
+  issueDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+  durationDays: number; // 15 for Black, 3 for Yellow
+  reason: string;
+  issuedBy: string;
+  status: DisciplinarySheetStatus;
+  revokedAt?: string;
+  revokedBy?: string;
+  revocationReason?: string;
+  createdAt: string;
 }
 
 export type AuditActionType = 
@@ -104,7 +129,9 @@ export type AuditActionType =
   | 'ROUND_CREATED'
   | 'ROUND_STATUS_CHANGED'
   | 'STUDENT_CREATED'
-  | 'STUDENT_UPDATED';
+  | 'STUDENT_UPDATED'
+  | 'DISCIPLINARY_SHEET_ISSUED'
+  | 'DISCIPLINARY_SHEET_REVOKED';
 
 export interface AuditLog {
   id: string;
