@@ -101,57 +101,65 @@ Do NOT return any markdown wrapper code blocks or conversational text outside th
     ];
   }
 
-  const modelToUse = isBase64Image ? 'llama-3.2-11b-vision-preview' : 'llama-3.3-70b-versatile';
+  // For vision images, try supported vision models or fall back to Gemini AI
+  const visionModelsToTry = ['llama-3.2-90b-vision-preview', 'qwen/qwen3.6-27b', 'llama-3.3-70b-versatile'];
+  const textModelsToTry = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
 
-  try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: modelToUse,
-        messages: messagesPayload,
-        temperature: 0.1,
-      }),
-    });
+  const modelsToTry = isBase64Image ? visionModelsToTry : textModelsToTry;
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Groq AI Service Error (${response.status}): ${errText}`);
-    }
-
-    const data = await response.json();
-    const rawContent = data.choices?.[0]?.message?.content || '[]';
-    const jsonStr = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
-    const parsedArray = JSON.parse(jsonStr);
-
-    if (!Array.isArray(parsedArray)) {
-      throw new Error('Groq AI Service did not return a valid array of students.');
-    }
-
-    return parsedArray.map((item: any) => ({
-      fullName: String(item.fullName || 'Unknown Student'),
-      classGrade: String(item.classGrade || 'TBD'),
-      houseGroup: ['Qurtuba', 'Nizamiyya', 'Azhar', 'Zitouna'].includes(item.houseGroup)
-        ? item.houseGroup
-        : 'Qurtuba',
-      studentId: item.studentId ? String(item.studentId) : undefined,
-    }));
-  } catch (err: any) {
-    console.warn('Groq AI Scanner Error, attempting Gemini AI fallback...', err);
-
-    // Fallback 1: Try Gemini AI automatically
+  for (const modelToUse of modelsToTry) {
     try {
-      const geminiResults = await parsePaperWithGemini(paperContentTextOrBase64, customApiKey);
-      if (geminiResults && geminiResults.length > 0) {
-        console.log('Gemini AI Fallback scanner succeeded:', geminiResults);
-        return geminiResults;
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: modelToUse,
+          messages: messagesPayload,
+          temperature: 0.1,
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.warn(`Groq model ${modelToUse} returned status ${response.status}: ${errText}`);
+        continue; // Try next model in list
       }
-    } catch (geminiErr) {
-      console.warn('Gemini AI Fallback also failed:', geminiErr);
+
+      const data = await response.json();
+      const rawContent = data.choices?.[0]?.message?.content || '[]';
+      const jsonStr = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsedArray = JSON.parse(jsonStr);
+
+      if (!Array.isArray(parsedArray)) {
+        continue;
+      }
+
+      return parsedArray.map((item: any) => ({
+        fullName: String(item.fullName || 'Unknown Student'),
+        classGrade: String(item.classGrade || 'TBD'),
+        houseGroup: ['Qurtuba', 'Nizamiyya', 'Azhar', 'Zitouna'].includes(item.houseGroup)
+          ? item.houseGroup
+          : 'Qurtuba',
+        studentId: item.studentId ? String(item.studentId) : undefined,
+      }));
+    } catch (modelErr) {
+      console.warn(`Attempt with Groq model ${modelToUse} failed:`, modelErr);
     }
+  }
+
+  // If all Groq models failed or decommissioned, automatically fallback to Gemini AI
+  try {
+    const geminiResults = await parsePaperWithGemini(paperContentTextOrBase64, customApiKey);
+    if (geminiResults && geminiResults.length > 0) {
+      console.log('Gemini AI Fallback scanner succeeded:', geminiResults);
+      return geminiResults;
+    }
+  } catch (geminiErr) {
+    console.warn('Gemini AI Fallback failed:', geminiErr);
+  }
 
     // Fallback 2: Offline regex parser if plain text
     if (!isBase64Image && paperContentTextOrBase64.trim().length > 0) {
