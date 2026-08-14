@@ -161,15 +161,14 @@ Do NOT return any markdown wrapper code blocks or conversational text outside th
     console.warn('Gemini AI Fallback failed:', geminiErr);
   }
 
-    // Fallback 2: Offline regex parser if plain text
-    if (!isBase64Image && paperContentTextOrBase64.trim().length > 0) {
-      const fallbackResults = fallbackLocalParseText(paperContentTextOrBase64);
-      if (fallbackResults.length > 0) {
-        console.warn('Using offline fallback regex parser:', fallbackResults);
-        return fallbackResults;
-      }
+  // Fallback 2: Offline regex parser if plain text
+  if (!isBase64Image && paperContentTextOrBase64.trim().length > 0) {
+    const fallbackResults = fallbackLocalParseText(paperContentTextOrBase64);
+    if (fallbackResults.length > 0) {
+      console.warn('Using offline fallback regex parser:', fallbackResults);
+      return fallbackResults;
     }
-
-    throw err;
   }
+
+  throw new Error('Groq and Gemini AI services failed to process paper document.');
 };
