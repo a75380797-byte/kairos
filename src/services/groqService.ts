@@ -102,7 +102,7 @@ Do NOT return any markdown wrapper code blocks or conversational text outside th
   }
 
   // For vision images, try supported vision models or fall back to Gemini AI
-  const visionModelsToTry = ['llama-3.2-90b-vision-preview', 'qwen/qwen3.6-27b', 'llama-3.3-70b-versatile'];
+  const visionModelsToTry = ['qwen/qwen3.6-27b'];
   const textModelsToTry = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
 
   const modelsToTry = isBase64Image ? visionModelsToTry : textModelsToTry;
@@ -130,8 +130,18 @@ Do NOT return any markdown wrapper code blocks or conversational text outside th
 
       const data = await response.json();
       const rawContent = data.choices?.[0]?.message?.content || '[]';
-      const jsonStr = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsedArray = JSON.parse(jsonStr);
+
+      // Clean out <think>...</think> reasoning blocks from Qwen / reasoning models
+      let cleanStr = rawContent
+        .replace(/<think>[\s\S]*?<\/think>/gi, '')
+        .replace(/```json/gi, '')
+        .replace(/```/g, '')
+        .trim();
+
+      const jsonMatch = cleanStr.match(/\[\s*\{[\s\S]*\}\s*\]/);
+      if (jsonMatch) cleanStr = jsonMatch[0];
+
+      const parsedArray = JSON.parse(cleanStr);
 
       if (!Array.isArray(parsedArray)) {
         continue;

@@ -109,7 +109,7 @@ Do NOT return any markdown wrapper code blocks or conversational text outside th
     ];
   }
 
-  const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+  const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
   let lastError: any = null;
 
   for (const model of modelsToTry) {
@@ -148,8 +148,16 @@ Do NOT return any markdown wrapper code blocks or conversational text outside th
 
       const data = await response.json();
       const rawContent = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-      const jsonStr = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsedArray = JSON.parse(jsonStr);
+      
+      let cleanStr = rawContent
+        .replace(/<think>[\s\S]*?<\/think>/gi, '')
+        .replace(/```json/gi, '')
+        .replace(/```/g, '')
+        .trim();
+      const jsonMatch = cleanStr.match(/\[\s*\{[\s\S]*\}\s*\]/);
+      if (jsonMatch) cleanStr = jsonMatch[0];
+
+      const parsedArray = JSON.parse(cleanStr);
 
       if (!Array.isArray(parsedArray)) {
         throw new Error('Gemini AI Service did not return a valid array of students.');
