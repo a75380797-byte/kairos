@@ -6,14 +6,19 @@ export interface ParsedStudentFromPaper {
 }
 
 /**
- * Local regex fallback parser when network fetch fails or internet is offline
+ * Intelligent local regex fallback parser when AI network fetch fails or internet is offline.
+ * Cleanly ignores document titles, headers, colons, and meta text (e.g. "Class XI-A Qurtuba Team Paper Sheet:").
  */
 export const fallbackLocalParseText = (text: string): ParsedStudentFromPaper[] => {
   const lines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
   const results: ParsedStudentFromPaper[] = [];
 
   for (const line of lines) {
-    if (/^(class|sheet|team|paper|student|list|registration|attendance)/i.test(line) && !line.includes(':') && !/\d/.test(line)) {
+    // Skip document headers, titles, and list metadata lines
+    if (
+      /(paper\s*sheet|attendance|registration|student\s*list|class\s*list|team\s*list|roster|header|sheet:)/i.test(line) ||
+      (line.endsWith(':') && !/\d/.test(line))
+    ) {
       continue;
     }
 
@@ -31,12 +36,17 @@ export const fallbackLocalParseText = (text: string): ParsedStudentFromPaper[] =
     let cleanName = line
       .replace(/^\d+[\.\)\-]?\s*/, '')
       .replace(/\(.*?\)/g, '')
-      .replace(/\b(Class|Team|House|Qurtuba|Nizamiyya|Azhar|Zitouna|S1A|S1B|S2A|S2B|C1A|C1B|C1C|C2A|C2B|C2C)\b/gi, '')
+      .replace(/\b(Class|Team|House|Qurtuba|Nizamiyya|Azhar|Zitouna|S1A|S1B|S2A|S2B|C1A|C1B|C1C|C2A|C2B|C2C|Paper|Sheet|List|Roster)\b/gi, '')
       .replace(/[,;:\-]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
-    if (cleanName.length >= 2 && !/^(name|student|id|grade|house)$/i.test(cleanName)) {
+    // Ensure extracted string is a valid student name (not header words)
+    if (
+      cleanName.length >= 2 &&
+      !/^(name|student|id|grade|house|paper|sheet|list|roster|class)$/i.test(cleanName) &&
+      !/paper\s*sheet|class\s*sheet/i.test(cleanName)
+    ) {
       results.push({
         fullName: cleanName,
         classGrade,
@@ -49,7 +59,33 @@ export const fallbackLocalParseText = (text: string): ParsedStudentFromPaper[] =
 };
 
 /**
+ * Filter out any non-student header rows from AI JSON results
+ */
+const sanitizeExtractedStudents = (parsedArray: any[]): ParsedStudentFromPaper[] => {
+  return parsedArray
+    .filter((item) => {
+      const name = String(item.fullName || item.name || '').trim();
+      if (!name || name.length < 2) return false;
+      if (/(paper\s*sheet|attendance|student\s*list|class\s*sheet|roster|header)/i.test(name)) {
+        return false;
+      }
+      return true;
+    })
+    .map((item) => ({
+      fullName: String(item.fullName || item.name || 'Unknown Student')
+        .replace(/\b(Paper Sheet|Class Sheet|Student List)\b/gi, '')
+        .trim(),
+      classGrade: String(item.classGrade || item.class || 'TBD').toUpperCase().trim(),
+      houseGroup: (['Qurtuba', 'Nizamiyya', 'Azhar', 'Zitouna'].includes(item.houseGroup)
+        ? item.houseGroup
+        : 'Qurtuba') as any,
+      studentId: item.studentId ? String(item.studentId).trim() : undefined,
+    }));
+};
+
+/**
  * Parses paper text or scanned image using Pollinations AI (100% Free Forever API)
+ * with robust JSON regex extraction & header suppression.
  */
 export const parsePaperWithPollinations = async (
   paperContentTextOrBase64: string
@@ -57,8 +93,10 @@ export const parsePaperWithPollinations = async (
   const isBase64Image = paperContentTextOrBase64.startsWith('data:image/');
 
   const systemPrompt = `You are a high-precision AI document and paper scanner parser for a school system.
-Read the provided paper attendance sheet / poster / scanned text and extract ALL student records.
-Extract for each student:
+Read the provided paper attendance sheet / poster / scanned text and extract ONLY valid student records.
+IMPORTANT: Ignore sheet titles, document headers, or metadata lines like "Class XI-A Qurtuba Team Paper Sheet:".
+
+Extract for each valid student:
 - fullName (e.g. Ahmed Al-Mansoor)
 - classGrade (strictly one of: S1A, S1B, S2A, S2B, C1A, C1B, C1C, C2A, C2B, C2C, 8, 9, TBD. Default to TBD if unspecified)
 - houseGroup (strictly one of: Qurtuba, Nizamiyya, Azhar, Zitouna. Default to Qurtuba if unspecified)
@@ -66,7 +104,7 @@ Extract for each student:
 Return ONLY a valid raw JSON array matching schema:
 [
   {
-    "fullName": "Student Name",
+    "fullName": "Ahmed Al-Mansoor",
     "classGrade": "S1A",
     "houseGroup": "Qurtuba",
     "studentId": "STU..." (optional)
@@ -113,22 +151,14 @@ Do NOT return any markdown wrapper, code blocks, or conversational text outside 
 
     const textResult = await response.text();
 
-    // Clean JSON response (strip potential markdown backticks)
-    const jsonCleaned = textResult
-      .replace(/```json/gi, '')
-      .replace(/```/g, '')
-      .trim();
-
-    const parsed = JSON.parse(jsonCleaned);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.map((item) => ({
-        fullName: String(item.fullName || item.name || 'Unknown Student').trim(),
-        classGrade: String(item.classGrade || item.class || 'TBD').toUpperCase().trim(),
-        houseGroup: (['Qurtuba', 'Nizamiyya', 'Azhar', 'Zitouna'].includes(item.houseGroup)
-          ? item.houseGroup
-          : 'Qurtuba') as any,
-        studentId: item.studentId ? String(item.studentId).trim() : undefined,
-      }));
+    // Robust JSON extraction using regex match for [ ... ]
+    const jsonMatch = textResult.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const sanitized = sanitizeExtractedStudents(parsed);
+        if (sanitized.length > 0) return sanitized;
+      }
     }
 
     return fallbackLocalParseText(paperContentTextOrBase64);
