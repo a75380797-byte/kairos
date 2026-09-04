@@ -19,7 +19,7 @@ import {
 import confetti from 'canvas-confetti';
 import { checkStudentEligibility } from '../services/eligibilityEngine';
 import { OverrideModal } from '../components/OverrideModal';
-import { parsePaperWithGroq, type ParsedStudentFromPaper } from '../services/groqService';
+import { parsePaperWithPollinations, type ParsedStudentFromPaper } from '../services/pollinationsService';
 import type { Student, ParticipationStatus, EligibilityResult } from '../types';
 
 interface RegistrationPageProps {
@@ -68,24 +68,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const [customGroqKey, setCustomGroqKey] = useState<string>(
-    () => localStorage.getItem('kairoos_groq_key') || ''
-  );
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
-  const handleToggleApiKeySettings = () => {
-    if (showApiKeyInput) {
-      setShowApiKeyInput(false);
-      return;
-    }
-
-    const code = window.prompt('Enter Admin Secret Security Code to unlock AI Key Settings:');
-    if (code === '786') {
-      setShowApiKeyInput(true);
-    } else if (code !== null) {
-      alert('Incorrect secret code! Access denied.');
-    }
-  };
 
   // AI Camera Paper Scanner Modal State
   const [isAiScannerOpen, setIsAiScannerOpen] = useState(false);
@@ -282,7 +265,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
     setScanResults(null);
 
     try {
-      const extractedList = await parsePaperWithGroq(contentToScan, customGroqKey);
+      const extractedList = await parsePaperWithPollinations(contentToScan);
 
       const evaluatedItems: AIScanEvaluationItem[] = extractedList.map((ext) => {
         let matched = students.find(
@@ -821,46 +804,12 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
 
             <div className="mb-3 flex-between" style={{ fontSize: '0.875rem', color: '#334155' }}>
               <span>Position paper sheet in front of camera or snap/upload photo. The AI will parse records & verify eligibility.</span>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
-                onClick={handleToggleApiKeySettings}
-              >
-                ⚙️ {showApiKeyInput ? 'Hide API Settings' : '🔒 Groq Key Settings'}
-              </button>
+              <span className="badge badge-eligible" style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }}>
+                ✨ Pollinations AI (100% Free Forever)
+              </span>
             </div>
 
-            {showApiKeyInput && (
-              <div className="mb-4" style={{ padding: '0.75rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 'var(--radius-md)' }}>
-                <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 700 }}>
-                  Custom Groq API Key (Optional Override)
-                </label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input
-                    type="password"
-                    className="form-control"
-                    placeholder="gsk_..."
-                    value={customGroqKey}
-                    onChange={(e) => setCustomGroqKey(e.target.value)}
-                    style={{ fontSize: '0.82rem' }}
-                  />
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    type="button"
-                    onClick={() => {
-                      localStorage.setItem('kairoos_groq_key', customGroqKey);
-                      alert('Saved custom Groq API key!');
-                    }}
-                  >
-                    Save Key
-                  </button>
-                </div>
-                <div style={{ fontSize: '0.73rem', color: '#64748b', marginTop: '0.3rem' }}>
-                  Get your free API key at <a href="https://console.groq.com" target="_blank" rel="noreferrer">console.groq.com</a> if default key rate-limits.
-                </div>
-              </div>
-            )}
+
 
             {/* SCANNER MODES TABS */}
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', background: '#f1f5f9', padding: '0.3rem', borderRadius: 'var(--radius-md)' }}>
