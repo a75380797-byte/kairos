@@ -92,7 +92,7 @@ export const StudentsPage: React.FC<StudentsPageProps> = ({ onSelectStudent }) =
 
       {/* Filters Card */}
       <div className="card mb-6">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+        <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
           <div>
             <label className="form-label">Search Student</label>
             <div style={{ position: 'relative' }}>
@@ -221,6 +221,7 @@ export const StudentsPage: React.FC<StudentsPageProps> = ({ onSelectStudent }) =
       {/* POPUP MODAL 1: ADD STUDENT */}
       {isAddStudentOpen && (
         <div
+          className="mobile-modal"
           style={{
             position: 'fixed',
             top: 0,
@@ -325,6 +326,7 @@ export const StudentsPage: React.FC<StudentsPageProps> = ({ onSelectStudent }) =
       {/* POPUP MODAL 2: EDIT STUDENT */}
       {editingStudent && (
         <div
+          className="mobile-modal"
           style={{
             position: 'fixed',
             top: 0,

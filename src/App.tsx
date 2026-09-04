@@ -183,8 +183,9 @@ const MainApp: React.FC = () => {
         </nav>
 
         {/* User Role Switcher & Database Tools */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="mobile-header-controls" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div
+            className="role-switcher-compact"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -219,7 +220,7 @@ const MainApp: React.FC = () => {
 
           <div style={{ position: 'relative' }}>
             <button
-              className="btn btn-secondary btn-sm"
+              className="btn btn-secondary btn-sm db-tools-btn"
               style={{ background: '#ffffff', color: '#1e3a8a', fontWeight: 800 }}
               onClick={() => setIsDbMenuOpen(!isDbMenuOpen)}
             >
@@ -229,6 +230,7 @@ const MainApp: React.FC = () => {
 
             {isDbMenuOpen && (
               <div
+                className="db-tools-dropdown"
                 style={{
                   position: 'absolute',
                   right: 0,

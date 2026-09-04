@@ -43,7 +43,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className="modal-card"
+        className="modal-card mobile-modal"
         style={{ maxWidth: '650px' }}
         onClick={(e) => e.stopPropagation()}
       >

@@ -68,7 +68,7 @@ export const ReportsPage: React.FC = () => {
 
   return (
     <div>
-      <div className="flex-between mb-6">
+      <div className="flex-between mb-6 responsive-flex">
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Participation & Restriction Analytics</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
@@ -89,7 +89,7 @@ export const ReportsPage: React.FC = () => {
       </div>
 
       <div className="glass-card mb-6" style={{ padding: '1rem 1.25rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+        <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
           <div>
             <label className="form-label">Filter Program</label>
             <select
@@ -153,7 +153,7 @@ export const ReportsPage: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+      <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
         <div className="glass-card">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
             <Award size={20} className="text-warning" />

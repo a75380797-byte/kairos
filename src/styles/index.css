@@ -357,19 +357,28 @@ h1, h2, h3, h4 {
 
 /* Mobile Navigation Bar & Responsive Auto-Device Scale System */
 @media (max-width: 768px) {
-  /* Hide desktop tab navigation in header */
+  /* === GLOBAL OVERFLOW PREVENTION === */
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  #root {
+    border-inline: none;
+  }
+
+  /* === HIDE DESKTOP NAV, SHOW MOBILE BOTTOM NAV === */
   .tab-nav-desktop {
     display: none !important;
   }
 
-  /* Show fixed bottom navigation bar on mobile */
   .bottom-nav-mobile {
     display: flex !important;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 64px;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
     background: #1e3a8a;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.3);
@@ -377,6 +386,7 @@ h1, h2, h3, h4 {
     justify-content: space-around;
     align-items: center;
     padding: 0 0.25rem;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     backdrop-filter: blur(10px);
   }
 
@@ -385,18 +395,19 @@ h1, h2, h3, h4 {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.2rem;
+    gap: 0.15rem;
     color: #93c5fd;
     background: none;
     border: none;
-    font-size: 0.725rem;
+    font-size: 0.65rem;
     font-weight: 700;
-    padding: 0.35rem 0.5rem;
-    border-radius: 12px;
+    padding: 0.35rem 0.25rem;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.15s ease;
     flex: 1;
     text-align: center;
+    min-height: 44px;
   }
 
   .bottom-nav-item.active {
@@ -405,34 +416,91 @@ h1, h2, h3, h4 {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
 
-  /* Adjust main layout padding on mobile to make room for bottom nav */
-  .main-layout {
-    padding: 0.85rem 0.75rem 5.5rem 0.75rem !important;
-    margin: 0.5rem auto !important;
+  /* === HEADER === */
+  .app-header {
+    padding: 0.5rem 0.75rem !important;
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
 
-  /* Header adjustments */
-  .app-header {
-    padding: 0.65rem 0.85rem !important;
+  .brand {
     gap: 0.5rem;
   }
 
   .brand-title {
-    font-size: 1.15rem !important;
+    font-size: 1.1rem !important;
   }
 
   .brand-badge {
     display: none !important;
   }
 
-  /* Card padding and touch sizing */
-  .card {
-    padding: 1rem !important;
-    border-radius: var(--radius-md) !important;
-    margin-bottom: 1rem !important;
+  /* Header right-side controls */
+  .mobile-header-controls {
+    gap: 0.4rem !important;
+    flex-wrap: wrap;
   }
 
-  /* Inputs and Touch hit targets */
+  .mobile-header-controls .role-switcher-compact {
+    padding: 0.2rem 0.4rem !important;
+    font-size: 0.7rem !important;
+  }
+
+  .mobile-header-controls .role-switcher-compact select {
+    font-size: 0.7rem !important;
+    max-width: 110px;
+  }
+
+  /* Database Tools button — icon only on mobile */
+  .db-tools-btn span {
+    display: none !important;
+  }
+
+  .db-tools-btn {
+    padding: 0.4rem 0.5rem !important;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  /* Database Tools dropdown — full width overlay on mobile */
+  .db-tools-dropdown {
+    position: fixed !important;
+    left: 0.75rem !important;
+    right: 0.75rem !important;
+    top: auto !important;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    min-width: unset !important;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  /* === MAIN LAYOUT === */
+  .main-layout {
+    padding: 0.75rem 0.75rem calc(72px + env(safe-area-inset-bottom, 0px)) 0.75rem !important;
+    margin: 0.25rem auto !important;
+  }
+
+  /* === CARDS === */
+  .card {
+    padding: 0.85rem !important;
+    border-radius: var(--radius-md) !important;
+    margin-bottom: 0.85rem !important;
+  }
+
+  /* === TYPOGRAPHY === */
+  h1 {
+    font-size: 1.35rem !important;
+  }
+
+  h2 {
+    font-size: 1.2rem !important;
+  }
+
+  h3 {
+    font-size: 1rem !important;
+  }
+
+  /* === FORM CONTROLS — TOUCH-FRIENDLY === */
   .form-control {
     min-height: 44px;
     font-size: 16px !important; /* 16px prevents iOS zoom on focus */
@@ -440,23 +508,264 @@ h1, h2, h3, h4 {
 
   .btn {
     min-height: 44px;
-    padding: 0.6rem 1rem !important;
+    padding: 0.55rem 0.85rem !important;
+    font-size: 0.8rem !important;
   }
 
-  /* Flex containers stack vertically on narrow screens */
-  .flex-between {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
+  .btn-sm {
+    min-height: 36px;
+    padding: 0.35rem 0.6rem !important;
+    font-size: 0.75rem !important;
   }
 
-  .flex-between > div,
-  .flex-between > button {
+  .btn-lg {
+    padding: 0.65rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* === RESPONSIVE UTILITY CLASSES === */
+
+  /* Stacks any grid to single column on mobile */
+  .responsive-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Stacks flex containers vertically on mobile */
+  .responsive-flex {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.6rem !important;
+  }
+
+  .responsive-flex > * {
     width: 100%;
   }
 
-  /* Tables container smooth touch scrolling */
+  /* Same behavior for the existing .flex-between */
+  .flex-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .flex-between > div,
+  .flex-between > button,
+  .flex-between > a {
+    width: 100%;
+  }
+
+  /* === TABLES — SMOOTH HORIZONTAL SCROLL === */
   .table-container {
     -webkit-overflow-scrolling: touch;
+    position: relative;
+    border-radius: var(--radius-sm);
+  }
+
+  .custom-table th {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+
+  .custom-table td {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.78rem;
+  }
+
+  /* === MODALS — MOBILE-FRIENDLY === */
+  .mobile-modal {
+    padding: 0.5rem !important;
+    align-items: flex-end !important;
+  }
+
+  .mobile-modal > .card,
+  .mobile-modal > div > .card,
+  .mobile-modal-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+    margin: 0 !important;
+  }
+
+  /* === LOGIN PAGE === */
+  .kp-card {
+    width: calc(100vw - 2rem) !important;
+    max-width: 420px !important;
+    padding: 1.25rem !important;
+  }
+
+  .kp-input {
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  .kp-btn {
+    min-height: 48px;
+    font-size: 16px !important;
+  }
+
+  /* === BADGES — WRAP NICELY === */
+  .badge {
+    font-size: 0.68rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  /* === BANNERS — COMPACT ON MOBILE === */
+  .restriction-banner,
+  .eligible-banner {
+    padding: 0.85rem !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  /* === DISCIPLINARY PAGE CONTAINER OVERRIDE === */
+  .page-container {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* === STAT GRID CARDS === */
+  .stat-card-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  /* === SEARCH DROPDOWN === */
+  .search-dropdown {
+    max-height: 200px !important;
+  }
+
+  /* === BUTTON GROUPS — WRAP ON MOBILE === */
+  .btn-group-mobile {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .btn-group-mobile > .btn {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* === STEP NUMBER BADGES (Registration Page) === */
+  .step-header {
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+  }
+
+  /* === AI SCANNER MODAL SPECIFICS === */
+  .ai-scanner-modal {
+    padding: 0.5rem !important;
+  }
+
+  .ai-scanner-modal .card {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* === INLINE STYLE OVERRIDES FOR COMMON PATTERNS === */
+  /* Override inline gridTemplateColumns on cards within main-layout */
+  .main-layout [style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Override inline display:flex justify-content:space-between patterns */
+  .main-layout [style*="space-between"]:not(.custom-table *):not(.tab-nav *) {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* Student profile header card wrapping */
+  .student-profile-header {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: flex-start !important;
+  }
+
+  .student-profile-header .badge {
+    margin-bottom: 0.25rem;
+  }
+
+  /* Program detail header */
+  .program-detail-header {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: flex-start !important;
+  }
+
+  /* Registration participant controls */
+  .participant-actions {
+    flex-direction: column !important;
+    gap: 0.35rem !important;
+    align-items: stretch !important;
+  }
+
+  .participant-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Sub-tab navigation (Disciplinary page) */
+  .sub-tab-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    gap: 0.35rem !important;
+    padding-bottom: 0.25rem;
+  }
+
+  .sub-tab-nav > button {
+    flex-shrink: 0;
+    min-width: auto;
+  }
+
+  /* Override fixed-width inline styles on select/status dropdowns in tables */
+  .custom-table .form-control {
+    min-height: 36px !important;
+    font-size: 13px !important;
+    padding: 0.2rem 0.35rem !important;
   }
 }
+
+/* === EXTRA SMALL SCREENS (320px) === */
+@media (max-width: 360px) {
+  .app-header {
+    padding: 0.4rem 0.5rem !important;
+  }
+
+  .brand-title {
+    font-size: 0.95rem !important;
+  }
+
+  .main-layout {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  .card {
+    padding: 0.65rem !important;
+  }
+
+  .bottom-nav-item {
+    font-size: 0.58rem;
+    padding: 0.25rem 0.15rem;
+  }
+
+  .btn {
+    font-size: 0.75rem !important;
+    padding: 0.45rem 0.6rem !important;
+  }
+
+  h2 {
+    font-size: 1.05rem !important;
+  }
+
+  .stat-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+

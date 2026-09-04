@@ -30,7 +30,7 @@ export const AuditLogsPage: React.FC = () => {
       </div>
 
       <div className="glass-card mb-6" style={{ padding: '1rem 1.25rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+        <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
           <div>
             <label className="form-label">Search Log Trail</label>
             <div style={{ position: 'relative' }}>

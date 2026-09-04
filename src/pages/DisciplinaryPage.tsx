@@ -165,6 +165,7 @@ export const DisciplinaryPage: React.FC = () => {
     <div className="page-container" style={{ padding: '1.5rem 2rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header Banner */}
       <div
+        className="responsive-flex banner-responsive"
         style={{
           background: 'linear-gradient(135deg, #1e1b4b 0%, #311b92 50%, #4527a0 100%)',
           borderRadius: '16px',
@@ -234,6 +235,7 @@ export const DisciplinaryPage: React.FC = () => {
 
       {/* Metric Cards Grid */}
       <div
+        className="responsive-grid stat-cards-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
@@ -386,6 +388,7 @@ export const DisciplinaryPage: React.FC = () => {
 
       {/* Navigation Sub-Tabs */}
       <div
+        className="sub-tabs-scroll"
         style={{
           display: 'flex',
           gap: '0.75rem',
@@ -441,6 +444,7 @@ export const DisciplinaryPage: React.FC = () => {
         <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '1.5rem' }}>
           {/* Controls Bar */}
           <div
+            className="responsive-flex"
             style={{
               display: 'flex',
               flexWrap: 'wrap',
@@ -802,6 +806,7 @@ export const DisciplinaryPage: React.FC = () => {
           }}
         >
           <div
+            className="mobile-modal"
             style={{
               background: '#ffffff',
               borderRadius: '16px',
@@ -1023,6 +1028,7 @@ export const DisciplinaryPage: React.FC = () => {
           }}
         >
           <div
+            className="mobile-modal"
             style={{
               background: '#ffffff',
               borderRadius: '16px',

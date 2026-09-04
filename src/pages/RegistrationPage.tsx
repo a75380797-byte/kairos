@@ -388,7 +388,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
 
       {/* STEP 1: Select Program & Round */}
       <div className="card mb-6">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+        <div className="responsive-flex" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1d4ed8', fontWeight: 800 }}>
             <span style={{ background: '#1d4ed8', color: 'white', width: '22px', height: '22px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>1</span>
             <span>SELECT PROGRAM & TARGET ROUND</span>
@@ -419,7 +419,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
             </button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+          <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
             <div>
               <label className="form-label">Program</label>
               <select
@@ -504,6 +504,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
 
           {filteredStudentSuggestions.length > 0 && !selectedStudent && (
             <div
+              className="search-dropdown"
               style={{
                 position: 'absolute',
                 top: '100%',
@@ -570,7 +571,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div className="btn-group-mobile" style={{ display: 'flex', gap: '0.5rem' }}>
               <button
                 className="btn btn-secondary btn-sm"
                 onClick={() => onNavigateToStudent && onNavigateToStudent(selectedStudent.id)}
@@ -638,6 +639,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
 
               {/* High Contrast Restriction Summary Box */}
               <div
+                className="responsive-grid"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -667,7 +669,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div className="responsive-flex" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '0.8rem', color: '#991b1b', fontWeight: 600 }}>
                   🔒 System policy prevents adding restricted student.
                 </span>
@@ -780,6 +782,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
       {/* POPUP MODAL 1: AI CAMERA & DOCUMENT SCANNER */}
       {isAiScannerOpen && (
         <div
+          className="ai-scanner-modal"
           style={{
             position: 'fixed',
             top: 0,
@@ -1130,6 +1133,7 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
       {/* QUICK ADD ROUND POPUP MODAL */}
       {isAddRoundModalOpen && (
         <div
+          className="mobile-modal"
           style={{
             position: 'fixed',
             top: 0,

@@ -55,7 +55,7 @@ export const StudentDetailPage: React.FC<StudentDetailPageProps> = ({
       </button>
 
       <div className="card mb-6" style={{ background: '#1e3a8a', color: '#ffffff' }}>
-        <div className="flex-between">
+        <div className="flex-between responsive-flex">
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
             <div
               style={{
@@ -107,7 +107,7 @@ export const StudentDetailPage: React.FC<StudentDetailPageProps> = ({
           <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>Program-by-Program Live Eligibility</h3>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+        <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
           {programs.map((prog) => {
             const progRounds = rounds
               .filter((r) => r.programId === prog.id)
@@ -265,7 +265,7 @@ export const StudentDetailPage: React.FC<StudentDetailPageProps> = ({
           onClick={() => setEditingStudent(null)}
         >
           <div
-            className="card"
+            className="card mobile-modal"
             style={{ maxWidth: '480px', width: '100%', margin: 0, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)' }}
             onClick={(e) => e.stopPropagation()}
           >

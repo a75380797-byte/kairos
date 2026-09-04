@@ -83,7 +83,7 @@ export const ProgramDetailPage: React.FC<ProgramDetailPageProps> = ({
       </button>
 
       <div className="card mb-6">
-        <div className="flex-between">
+        <div className="flex-between responsive-flex">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <h2 style={{ fontSize: '1.65rem', fontWeight: 800 }}>{program.name}</h2>
@@ -240,7 +240,7 @@ export const ProgramDetailPage: React.FC<ProgramDetailPageProps> = ({
           onClick={() => setIsAddRoundOpen(false)}
         >
           <div
-            className="card"
+            className="card mobile-modal"
             style={{ maxWidth: '420px', width: '100%', margin: 0, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)' }}
             onClick={(e) => e.stopPropagation()}
           >

@@ -55,7 +55,7 @@ export const OverrideModal: React.FC<OverrideModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="card"
+        className="card mobile-modal"
         style={{ maxWidth: '520px', width: '100%', margin: 0, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)' }}
         onClick={(e) => e.stopPropagation()}
       >

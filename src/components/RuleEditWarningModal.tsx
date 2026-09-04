@@ -57,7 +57,7 @@ export const RuleEditWarningModal: React.FC<RuleEditWarningModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-card">
+      <div className="modal-card mobile-modal">
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Settings size={22} className="text-primary" />

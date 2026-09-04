@@ -99,7 +99,7 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ onSelectProgram }) =
 
   return (
     <div>
-      <div className="flex-between mb-6">
+      <div className="flex-between mb-6 responsive-flex">
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Programs & Eligibility Rules</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
@@ -132,7 +132,7 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ onSelectProgram }) =
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+        <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
           {programs.map((p) => {
             const progRounds = rounds
               .filter((r) => r.programId === p.id)
@@ -229,7 +229,7 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ onSelectProgram }) =
           onClick={() => setIsCreateProgramOpen(false)}
         >
           <div
-            className="card"
+            className="card mobile-modal"
             style={{ maxWidth: '560px', width: '100%', margin: 0, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)' }}
             onClick={(e) => e.stopPropagation()}
           >
