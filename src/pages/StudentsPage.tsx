@@ -190,29 +190,16 @@ export const StudentsPage: React.FC<StudentsPageProps> = ({ onSelectStudent }) =
                       <span className="badge badge-info">{s.houseGroup} Team</span>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                         {currentUserRole !== 'VIEWER' && (
-                          <>
-                            <button
-                              className="btn btn-secondary btn-sm"
-                              onClick={() => setEditingStudent({ ...s })}
-                            >
-                              <Edit2 size={14} />
-                              <span>Edit</span>
-                            </button>
-                            <button
-                              className="btn btn-secondary btn-sm"
-                              style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5' }}
-                              onClick={() => {
-                                if (window.confirm(`Are you sure you want to delete student "${s.fullName}" (${s.studentId}) from database?`)) {
-                                  deleteStudent(s.id);
-                                }
-                              }}
-                            >
-                              <Trash2 size={14} />
-                              <span>Delete</span>
-                            </button>
-                          </>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => setEditingStudent({ ...s })}
+                            title="Edit Student"
+                          >
+                            <Edit2 size={14} />
+                            <span>Edit</span>
+                          </button>
                         )}
 
                         <button
@@ -222,6 +209,33 @@ export const StudentsPage: React.FC<StudentsPageProps> = ({ onSelectStudent }) =
                           <span>Profile & History</span>
                           <ArrowRight size={14} />
                         </button>
+
+                        {currentUserRole !== 'VIEWER' && (
+                          <button
+                            className="btn btn-sm"
+                            style={{
+                              background: '#fee2e2',
+                              color: '#b91c1c',
+                              border: '1px solid #f87171',
+                              fontWeight: 700,
+                              padding: '0.35rem 0.65rem',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                            }}
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to permanently delete student "${s.fullName}" (${s.studentId}) from database?`)) {
+                                deleteStudent(s.id);
+                              }
+                            }}
+                            title="Delete Student"
+                          >
+                            <Trash2 size={14} />
+                            <span>Delete</span>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -427,13 +441,35 @@ export const StudentsPage: React.FC<StudentsPageProps> = ({ onSelectStudent }) =
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setEditingStudent(null)}>
-                  Cancel
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  style={{
+                    background: '#fee2e2',
+                    color: '#b91c1c',
+                    border: '1px solid #f87171',
+                    fontWeight: 700,
+                  }}
+                  onClick={() => {
+                    if (window.confirm(`Permanently delete "${editingStudent.fullName}" (${editingStudent.studentId})?`)) {
+                      deleteStudent(editingStudent.id);
+                      setEditingStudent(null);
+                    }
+                  }}
+                >
+                  <Trash2 size={14} />
+                  <span>Delete Student</span>
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  Save Changes
-                </button>
+
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setEditingStudent(null)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Save Changes
+                  </button>
+                </div>
               </div>
             </form>
           </div>
