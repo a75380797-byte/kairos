@@ -1026,22 +1026,42 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
 
             {scanResults && (
               <div style={{ borderTop: '2px dashed #cbd5e1', paddingTop: '1.25rem' }}>
-                <div className="flex-between mb-3">
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
-                    AI Inspection & Eligibility Report ({scanResults.length})
-                  </h4>
-
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={handleBulkRegisterEligibleFromScan}
-                    disabled={!scanResults.some((r) => r.eligibility.isEligible)}
+                {scanResults.length === 0 ? (
+                  <div
+                    style={{
+                      padding: '2rem',
+                      textAlign: 'center',
+                      background: '#fff1f2',
+                      border: '1.5px dashed #f43f5e',
+                      borderRadius: 'var(--radius-md)',
+                      color: '#9f1239',
+                    }}
                   >
-                    <UserPlus size={14} />
-                    <span>Register All Eligible ({scanResults.filter((r) => r.eligibility.isEligible).length})</span>
-                  </button>
-                </div>
+                    <div style={{ fontWeight: 800, fontSize: '1.15rem', marginBottom: '0.35rem' }}>
+                      🔍 No Student Found
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#881337' }}>
+                      No valid student names could be detected in this paper scan or image. Please verify the paper text or upload a clearer photo sheet.
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex-between mb-3">
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
+                        AI Inspection & Eligibility Report ({scanResults.length})
+                      </h4>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={handleBulkRegisterEligibleFromScan}
+                        disabled={!scanResults.some((r) => r.eligibility.isEligible)}
+                      >
+                        <UserPlus size={14} />
+                        <span>Register All Eligible ({scanResults.filter((r) => r.eligibility.isEligible).length})</span>
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {scanResults.map((item, idx) => (
                     <div
                       key={idx}
@@ -1073,7 +1093,9 @@ export const RegistrationPage: React.FC<RegistrationPageProps> = ({
                     </div>
                   ))}
                 </div>
-              </div>
+              </>
+            )}
+          </div>
             )}
           </div>
         </div>
