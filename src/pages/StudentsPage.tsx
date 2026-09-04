@@ -24,7 +24,7 @@ const CLASS_OPTIONS = [
 ];
 
 export const StudentsPage: React.FC<StudentsPageProps> = ({ onSelectStudent }) => {
-  const { students, addStudent, updateStudent, currentUserRole, resetDemoData } = useApp();
+  const { students, addStudent, updateStudent, currentUserRole } = useApp();
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState('ALL');
   const [houseFilter, setHouseFilter] = useState('ALL');
@@ -83,15 +83,10 @@ export const StudentsPage: React.FC<StudentsPageProps> = ({ onSelectStudent }) =
         </div>
 
         {currentUserRole !== 'VIEWER' && (
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button className="btn btn-secondary" onClick={resetDemoData} title="Load all 324 transcribed students into database">
-              <span>⚡ Load 324 Students (Class TBD)</span>
-            </button>
-            <button className="btn btn-primary" onClick={() => setIsAddStudentOpen(true)}>
-              <Plus size={18} />
-              <span>+ Add New Student</span>
-            </button>
-          </div>
+          <button className="btn btn-primary" onClick={() => setIsAddStudentOpen(true)}>
+            <Plus size={18} />
+            <span>+ Add New Student</span>
+          </button>
         )}
       </div>
 
@@ -152,9 +147,6 @@ export const StudentsPage: React.FC<StudentsPageProps> = ({ onSelectStudent }) =
           <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>
             Registered Students ({filteredStudents.length})
           </h3>
-          <button className="btn btn-secondary btn-sm" onClick={resetDemoData}>
-            <span>⚡ Reload All 324 Students (Class TBD)</span>
-          </button>
         </div>
 
         {filteredStudents.length === 0 ? (
@@ -163,19 +155,16 @@ export const StudentsPage: React.FC<StudentsPageProps> = ({ onSelectStudent }) =
               📦 No Students Matching Current Filter
             </div>
             <p style={{ color: '#334155', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
-              Click below to load all 324 transcribed students (with Class Grade set to TBD for manual assignment) or clear your search filters.
+              Try adjusting or clearing your search filters to view registered students.
             </p>
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-              <button className="btn btn-primary" onClick={resetDemoData}>
-                <span>⚡ Load All 324 Students (Class TBD)</span>
-              </button>
-              {currentUserRole !== 'VIEWER' && (
+            {currentUserRole !== 'VIEWER' && (
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
                 <button className="btn btn-secondary" onClick={() => setIsAddStudentOpen(true)}>
                   <Plus size={16} />
                   <span>+ Add Custom Student</span>
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="table-container">
