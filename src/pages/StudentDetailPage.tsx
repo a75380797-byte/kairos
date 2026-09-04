@@ -6,6 +6,7 @@ import {
   Zap,
   Edit2,
   X,
+  Trash2,
 } from 'lucide-react';
 import { checkStudentEligibility } from '../services/eligibilityEngine';
 import type { Student, HouseTeam } from '../types';
@@ -21,7 +22,7 @@ export const StudentDetailPage: React.FC<StudentDetailPageProps> = ({
   onBack,
   onNavigateToRegister,
 }) => {
-  const { students, programs, rounds, registrations, updateStudent, currentUserRole } = useApp();
+  const { students, programs, rounds, registrations, updateStudent, deleteStudent, currentUserRole } = useApp();
 
   const student = students.find((s) => s.id === studentId);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -89,14 +90,29 @@ export const StudentDetailPage: React.FC<StudentDetailPageProps> = ({
           </div>
 
           {currentUserRole !== 'VIEWER' && (
-            <button
-              className="btn btn-secondary"
-              style={{ background: '#ffffff', color: '#1e3a8a', fontWeight: 800 }}
-              onClick={() => setEditingStudent({ ...student })}
-            >
-              <Edit2 size={16} />
-              <span>Edit Details</span>
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className="btn btn-secondary"
+                style={{ background: '#ffffff', color: '#1e3a8a', fontWeight: 800 }}
+                onClick={() => setEditingStudent({ ...student })}
+              >
+                <Edit2 size={16} />
+                <span>Edit Details</span>
+              </button>
+              <button
+                className="btn btn-secondary"
+                style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', fontWeight: 800 }}
+                onClick={() => {
+                  if (window.confirm(`Are you sure you want to delete student "${student.fullName}" (${student.studentId}) from database?`)) {
+                    deleteStudent(student.id);
+                    onBack();
+                  }
+                }}
+              >
+                <Trash2 size={16} />
+                <span>Delete Student</span>
+              </button>
+            </div>
           )}
         </div>
       </div>

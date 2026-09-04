@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Search, Plus, ArrowRight, X, Edit2 } from 'lucide-react';
+import { Search, Plus, ArrowRight, X, Edit2, Trash2 } from 'lucide-react';
 import type { Student, HouseTeam } from '../types';
 
 interface StudentsPageProps {
@@ -24,7 +24,7 @@ const CLASS_OPTIONS = [
 ];
 
 export const StudentsPage: React.FC<StudentsPageProps> = ({ onSelectStudent }) => {
-  const { students, addStudent, updateStudent, currentUserRole } = useApp();
+  const { students, addStudent, updateStudent, deleteStudent, currentUserRole } = useApp();
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState('ALL');
   const [houseFilter, setHouseFilter] = useState('ALL');
@@ -192,13 +192,27 @@ export const StudentsPage: React.FC<StudentsPageProps> = ({ onSelectStudent }) =
                     <td>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         {currentUserRole !== 'VIEWER' && (
-                          <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => setEditingStudent({ ...s })}
-                          >
-                            <Edit2 size={14} />
-                            <span>Edit</span>
-                          </button>
+                          <>
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => setEditingStudent({ ...s })}
+                            >
+                              <Edit2 size={14} />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5' }}
+                              onClick={() => {
+                                if (window.confirm(`Are you sure you want to delete student "${s.fullName}" (${s.studentId}) from database?`)) {
+                                  deleteStudent(s.id);
+                                }
+                              }}
+                            >
+                              <Trash2 size={14} />
+                              <span>Delete</span>
+                            </button>
+                          </>
                         )}
 
                         <button

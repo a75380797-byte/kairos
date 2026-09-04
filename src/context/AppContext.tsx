@@ -46,6 +46,7 @@ interface AppContextType {
   
   addStudent: (student: Omit<Student, 'id' | 'createdAt'>) => Student;
   updateStudent: (student: Student) => void;
+  deleteStudent: (studentId: string) => void;
 
   issueDisciplinarySheet: (
     studentId: string,
@@ -554,6 +555,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  const deleteStudent = (studentId: string) => {
+    if (currentUserRole === 'VIEWER') return;
+    const student = students.find((s) => s.id === studentId);
+    if (!student) return;
+
+    const updatedStudents = students.filter((s) => s.id !== studentId);
+    updateStudentsState(updatedStudents);
+
+    // Remove registrations associated with deleted student
+    const updatedRegs = registrations.filter((r) => r.studentId !== studentId);
+    updateRegistrationsState(updatedRegs);
+
+    logAuditAction(
+      'STUDENT_DELETED',
+      `Deleted student record for ${student.fullName} (${student.studentId}).`,
+      { studentId: student.id, studentName: student.fullName }
+    );
+  };
+
   const issueDisciplinarySheet = (
     studentId: string,
     sheetType: SheetType,
@@ -708,6 +728,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         generateFutureRounds,
         addStudent,
         updateStudent,
+        deleteStudent,
         issueDisciplinarySheet,
         revokeDisciplinarySheet,
         getActiveBanForStudent,
